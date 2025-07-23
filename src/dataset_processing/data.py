@@ -174,48 +174,6 @@ def load_vs_trajectories(path: AnyPath) -> Sequence[Trajectory]:
         return TrajectoryValueSystemDatasetSequence(dataset)
     raise NotImplementedError("Only huggingface datasets format is supported")
 
-    data = np.load(path, allow_dill=True)  # works for both .npz and .pkl
-
-    if isinstance(data, Sequence):  # dill format
-        warnings.warn("Loading old dill version of Trajectories",
-                      DeprecationWarning)
-        return data
-    if isinstance(data, Mapping):  # .npz format
-        warnings.warn("Loading old npz version of Trajectories",
-                      DeprecationWarning)
-        num_trajs = len(data["indices"])
-        fields = [
-            # Account for the extra obs in each trajectory
-            np.split(data["obs"], data["indices"] + np.arange(num_trajs) + 1),
-            np.split(data["acts"], data["indices"]),
-            np.split(data["infos"], data["indices"]),
-            data["terminal"],
-        ]
-        if 'vs_rews' in data:
-            fields = [
-                *fields,
-                np.split(data["vs_rews"], data["indices"]),
-            ]
-            for k in data["value_rews"].keys():
-                fields = [
-                    *fields,
-                    np.split(data["value_rews"][k], data["indices"]),
-                ]
-            return [TrajectoryWithRew(*args) for args in zip(*fields)]
-        elif "rews" in data:
-            fields = [
-                *fields,
-                np.split(data["rews"], data["indices"]),
-            ]
-            return [TrajectoryWithRew(*args) for args in zip(*fields)]
-        else:
-            return [Trajectory(*args) for args in zip(*fields)]  # pragma: no cover
-    else:  # pragma: no cover
-        raise ValueError(
-            f"Expected either an .npz file or a dilld sequence of trajectories; "
-            f"got a dilld object of type {type(data).__name__}",
-        )
-
 
 class VSLPreferenceDataset(preference_comparisons.PreferenceDataset):
     """A PyTorch Dataset for preference comparisons.
@@ -251,11 +209,11 @@ class VSLPreferenceDataset(preference_comparisons.PreferenceDataset):
         return np.asarray(self.l_agent_ids)
 
     @property
-    def fragments1(self):
+    def fragments1(self) -> List[TrajectoryWithValueSystemRews]:
         return np.asarray(self.l_fragments1)
 
     @property
-    def fragments2(self):
+    def fragments2(self) -> List[TrajectoryWithValueSystemRews]:
         return np.asarray(self.l_fragments2)
 
     def push(

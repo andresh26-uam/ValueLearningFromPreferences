@@ -10,3 +10,4 @@ test_results/*
 
 datasets/complete_datasets/*
 !__init__.py
+.DS_Store
