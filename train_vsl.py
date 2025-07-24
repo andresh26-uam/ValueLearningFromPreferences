@@ -3,6 +3,8 @@ import time
 import dill
 import pprint
 import random
+from sklearn.linear_model import LinearRegression
+from sklearn.neural_network import MLPRegressor
 from typing import Any, Dict, List, Tuple, Union
 import numpy as np
 import torch
@@ -332,7 +334,7 @@ def rlhfFit(dataset_train: VSLPreferenceDataset, v, lr, hidden_layer_sizes=(16,2
 
     acc = accuracy(matrix, estimated_params, pair_to_agent_ids)
     print(f"Accuracy estimated for {v} is {acc}")
-    
+
     return net, matrix, estimated_params, estimated_params_v
 
 def accuracy(matrix, estimated_params, pair_to_agent_ids):
